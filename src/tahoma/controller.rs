@@ -69,12 +69,12 @@ impl TahomaController {
             .json(&payload)
             .send()?;
 
+        // println!("{:#?}", res);
+
         match res.error_for_status() {
             Ok(_res) => Ok(()),
             Err(err) => Err(anyhow!("Failed to execute command: {}", err)),
         }
-
-        // println!("{:#?}", res);
     }
 
     fn endpoint(&self, path: &str) -> String {

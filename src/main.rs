@@ -99,37 +99,22 @@ fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -
             return Ok(());
         }
         Commands::Open { device } => {
-            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
-                controller.execute(&device, "open", Vec::new())?;
-            }
-
-            println!("Executing open on...");
-
-            return Ok(());
+            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "open");
         }
         Commands::Close { device } => {
-            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
-                controller.execute(&device, "close", Vec::new())?;
-            }
-
-            println!("Executing close on...");
-            return Ok(());
+            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "close");
         }
         Commands::Stop { device } => {
-            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
-                controller.execute(&device, "stop", Vec::new())?;
-            }
-
-            println!("Executing stop on...");
-            return Ok(());
+            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "stop");
         }
     }
 }
 
 fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str) -> Result<()> {
     if let Some(device) = setup.get_device(&device_identifier) {
-        controller.execute(&device, "close", Vec::new())?;
+        controller.execute(&device, command, Vec::new())?;
         println!("Executing `{}` on `{}`...", command, device.label());
+        return Ok(());
     }
 
     Err(anyhow!("Unknown device `{}`", device_identifier))
