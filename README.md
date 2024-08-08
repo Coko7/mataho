@@ -11,3 +11,12 @@ A *re*-implementation of the CLI from [somfy-home-controller](https://github.com
     "api_token": "PUT_YOUR_SUPER_SECRET_TOKEN_HERE",
 }
 ```
+
+## 🐚 Usage
+
+![image](https://github.com/user-attachments/assets/700a0ed5-9225-4114-8bc7-2f90e0d2e384)
+
+## 📚 Resources
+
+- GitHub repo of [Somfy-TaHoma-Developer-Mode](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode)
+- Swagger UI for [local gateway API](https://somfy-developer.github.io/Somfy-TaHoma-Developer-Mode/)
