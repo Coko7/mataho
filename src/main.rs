@@ -1,38 +1,25 @@
 use anyhow::{anyhow, Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use serde::Deserialize;
-use std::fs;
-use tahoma::{controller::TahomaController, model::TahomaSetup};
+use std::{ffi::OsString, fs};
+use tahoma::{
+    controller::TahomaController,
+    model::{DeviceTypeFilter, TahomaSetup},
+};
 
 mod tahoma;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let config = read_config("config.json")?;
 
+    let config = read_config("config.json")?;
     let controller = TahomaController::new(config);
+
     let setup = controller.get_setup()?;
 
-    match args.command.as_str() {
-        "list" => list_devices(&setup),
-        cmd => {
-            let device_arg = args.device.expect("Expected a device name");
-
-            let device = setup
-                .get_device(&device_arg)
-                .ok_or_else(|| anyhow!("No known device matches `{}`", device_arg))?;
-
-            let _ = controller.execute(device, cmd, Vec::new());
-        } // _ => println!("Unsupported command: {}", command),
-    }
+    process_args(args, &controller, &setup)?;
 
     Ok(())
-}
-
-fn list_devices(setup: &TahomaSetup) {
-    for device in &setup.devices {
-        println!("{}", device);
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -53,14 +40,97 @@ fn read_config(path: &str) -> Result<Configuration> {
     Ok(config)
 }
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
+#[command(name = "taho")]
+#[command(about = "Interact with your Tahoma box in the terminal", long_about = None)]
 struct Cli {
-    /// Name of the command to execute
-    #[arg(short = 'c', long = "command")]
-    command: String,
+    #[command(subcommand)]
+    pub command: Commands,
+}
 
-    /// Device identifier (either ID or label)
-    #[arg(short = 'd', long = "device")]
-    device: Option<String>,
-    // path: std::path::PathBuf,
+#[derive(Debug, Subcommand)]
+enum Commands {
+    /// List local devices
+    List {
+        /// Only display a subcategory of devices
+        #[arg(
+            long, 
+            require_equals = true,
+            value_name = "TYPE",
+            num_args = 0..=1,
+            default_value_t = DeviceTypeFilter::All,
+            default_missing_value = "all",
+            value_enum)]
+        filter: DeviceTypeFilter,
+    },
+    /// List all commands supported by a device
+    #[command(name = "list-cmds")]
+    ListCommands {
+        /// Label, ID or URL of a device
+        device: OsString,
+    },
+    /// Trigger 'Open' action on device
+    Open {
+        /// Label, ID or URL of a device
+        device: OsString,
+    },
+    /// Trigger 'Close' action on device
+    Close {
+        /// Label, ID or URL of a device
+        device: OsString,
+    },
+    /// Trigger 'Stop' action on device
+    Stop {
+        /// Label, ID or URL of a device
+        device: OsString,
+    }
+}
+
+fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -> Result<()> {
+    match args.command {
+        Commands::List { filter } => {
+            return Ok(setup.print_devices(filter));
+        }
+        Commands::ListCommands { device } => {
+            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
+                return Ok(setup.print_device_commands(&device));
+            }
+
+            return Ok(());
+        }
+        Commands::Open { device } => {
+            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
+                controller.execute(&device, "open", Vec::new())?;
+            }
+
+            println!("Executing open on...");
+
+            return Ok(());
+        }
+        Commands::Close { device } => {
+            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
+                controller.execute(&device, "close", Vec::new())?;
+            }
+
+            println!("Executing close on...");
+            return Ok(());
+        }
+        Commands::Stop { device } => {
+            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
+                controller.execute(&device, "stop", Vec::new())?;
+            }
+
+            println!("Executing stop on...");
+            return Ok(());
+        }
+    }
+}
+
+fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str) -> Result<()> {
+    if let Some(device) = setup.get_device(&device_identifier) {
+        controller.execute(&device, "close", Vec::new())?;
+        println!("Executing `{}` on `{}`...", command, device.label());
+    }
+
+    Err(anyhow!("Unknown device `{}`", device_identifier))
 }

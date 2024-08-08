@@ -1,8 +1,9 @@
+use anyhow::anyhow;
 use serde_json::json;
 
 use crate::Configuration;
 
-use super::model::{Device, DeviceType, TahomaSetup};
+use super::model::{Device, TahomaSetup};
 
 pub struct TahomaController {
     hostname: String,
@@ -34,7 +35,7 @@ impl TahomaController {
             .bearer_auth(&self.api_token)
             .send()?;
 
-        // println!("{:#?}", res);
+        // println!("{:#?}", res);rus
         Ok(res.json()?)
     }
 
@@ -43,11 +44,11 @@ impl TahomaController {
         device: &Device,
         command: &str,
         params: Vec<String>,
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<(), anyhow::Error> {
         let client = Self::get_client();
 
         let payload = json!({
-            "label": format!("Exec {} on {}", command, device.device_url),
+            "label": format!("Exec {} on {}", command, device.url()),
             "actions":
             [
                 {
@@ -57,7 +58,7 @@ impl TahomaController {
                             "parameters": params
                         }
                     ],
-                    "deviceURL": device.device_url
+                    "deviceURL": device.url()
                 }
             ]
         });
@@ -68,24 +69,12 @@ impl TahomaController {
             .json(&payload)
             .send()?;
 
-        Ok(())
-    }
+        match res.error_for_status() {
+            Ok(_res) => Ok(()),
+            Err(err) => Err(anyhow!("Failed to execute command: {}", err)),
+        }
 
-    pub fn get_devices_with_type(
-        &self,
-        device_type: DeviceType,
-    ) -> Result<Vec<Device>, reqwest::Error> {
-        let devices = self.get_setup()?.devices;
-
-        let filtered_devices = devices
-            .into_iter()
-            .filter(|dev| dev.controllable_name == device_type.full_type());
-
-        Ok(filtered_devices.collect())
-    }
-
-    pub fn get_all_devices(&self) -> Result<Vec<Device>, reqwest::Error> {
-        Ok(self.get_setup()?.devices)
+        // println!("{:#?}", res);
     }
 
     fn endpoint(&self, path: &str) -> String {
