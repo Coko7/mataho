@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
-use std::{ffi::OsString, fs};
+use std::{env, ffi::OsString, fs};
 use tahoma::{
     controller::TahomaController,
     model::{DeviceTypeFilter, TahomaSetup},
@@ -12,9 +12,16 @@ mod tahoma;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let config = read_config("config.json")?;
-    let controller = TahomaController::new(config);
+    let config_path = match env::var("TAHOMA_CLI_CONFIG") {
+        Ok(path) => path,
+        Err(_) => {
+            let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
+            format!("{}/tahoma-cli/config.json", config_home)
+        }
+    };
 
+    let config = read_config(&config_path)?;
+    let controller = TahomaController::new(config);
     let setup = controller.get_setup()?;
 
     process_args(args, &controller, &setup)?;
