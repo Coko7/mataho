@@ -80,7 +80,7 @@ enum Commands {
     Run {
         /// Name of the command (see list-cmds for help)
         command: OsString,
-        /// Label, ID or URL of a device
+        /// ID or label of the device. Fuzzy matching is used
         device: OsString,
     },
 }
@@ -105,14 +105,17 @@ fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -
 
 fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str) -> Result<()> {
     if let Some(device) = setup.get_device(&device_identifier) {
-        if !device.definition().commands().iter().any(|cmd| cmd.name() == command) {
-            return Err(anyhow!("Device `{}` does not support the `{}` command", device_identifier, command));
+        // Ensure valid command
+        if let Some(command_obj) = device.definition().commands().iter().find(|cmd| cmd.name() == command) {
+            controller.execute(&device, command, Vec::new())?;
+            println!("Executing `{}` on `{}`...", command, device.label());
+
+            return Ok(());
         }
 
-        controller.execute(&device, command, Vec::new())?;
-        println!("Executing `{}` on `{}`...", command, device.label());
-        return Ok(());
+        return Err(anyhow!("Device `{}` does not support the `{}` command", device_identifier, command));
+
     }
 
-    Err(anyhow!("Unknown device `{}`", device_identifier))
+    Err(anyhow!("No such  device: `{}`", device_identifier))
 }

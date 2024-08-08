@@ -1,6 +1,7 @@
 use std::fmt;
 
 use clap::ValueEnum;
+use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -18,25 +19,31 @@ impl TahomaSetup {
     }
 
     pub fn print_device_commands(&self, device: &Device) {
+        println!("Showing commands for `{}`:", device.label());
         for command in device.definition.commands.iter() {
-            println!("{}", command);
+            println!("- {}", command);
         }
     }
 
-    pub fn get_device_by_label(&self, device_label: &str, invariant_case: bool) -> Option<&Device> {
+    pub fn get_device_by_label(&self, label: &str) -> Option<&Device> {
+        let label = label.to_lowercase();
+
+        let matcher = SkimMatcherV2::default();
+        let mut best_score = -1;
+        let mut pick: Option<&Device> = None;
+
+        // TODO COCO: What do we do if multiple devices share top score???
         for device in self.devices.iter() {
-            if invariant_case {
-                if device.label.to_lowercase() == device_label.to_lowercase() {
-                    return Some(&device);
-                }
-            } else {
-                if device.label == device_label {
-                    return Some(&device);
+            if let Some(score) = matcher.fuzzy_match(&device.label.to_lowercase(), &label) {
+                // println!("{} -> {}", device.label, score);
+                if score > best_score {
+                    best_score = score;
+                    pick = Some(device);
                 }
             }
         }
 
-        None
+        pick
     }
 
     pub fn get_device_by_id(&self, device_id: &str) -> Option<&Device> {
@@ -51,7 +58,7 @@ impl TahomaSetup {
 
     pub fn get_device(&self, identifier: &str) -> Option<&Device> {
         self.get_device_by_id(identifier)
-            .or_else(|| self.get_device_by_label(identifier, true))
+            .or_else(|| self.get_device_by_label(identifier))
     }
 }
 
