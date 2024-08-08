@@ -69,49 +69,39 @@ enum Commands {
         /// Label, ID or URL of a device
         device: OsString,
     },
-    /// Trigger 'Open' action on device
-    Open {
+    /// Run a Tahoma command on a single device
+    Run {
+        /// Name of the command (see list-cmds for help)
+        command: OsString,
         /// Label, ID or URL of a device
         device: OsString,
     },
-    /// Trigger 'Close' action on device
-    Close {
-        /// Label, ID or URL of a device
-        device: OsString,
-    },
-    /// Trigger 'Stop' action on device
-    Stop {
-        /// Label, ID or URL of a device
-        device: OsString,
-    }
 }
 
 fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -> Result<()> {
     match args.command {
         Commands::List { filter } => {
-            return Ok(setup.print_devices(filter));
+            Ok(setup.print_devices(filter))
         }
         Commands::ListCommands { device } => {
             if let Some(device) = setup.get_device(&device.to_string_lossy()) {
                 return Ok(setup.print_device_commands(&device));
             }
 
-            return Ok(());
+            Err(anyhow!("Failed to find a local device that matches `{}`", device.to_string_lossy()))
         }
-        Commands::Open { device } => {
-            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "open");
-        }
-        Commands::Close { device } => {
-            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "close");
-        }
-        Commands::Stop { device } => {
-            return execute_on_device(&controller, &setup, &device.to_string_lossy(), "stop");
+        Commands::Run { command, device } => {
+            execute_on_device(&controller, &setup, &device.to_string_lossy(), &command.to_string_lossy())
         }
     }
 }
 
 fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str) -> Result<()> {
     if let Some(device) = setup.get_device(&device_identifier) {
+        if !device.definition().commands().iter().any(|cmd| cmd.name() == command) {
+            return Err(anyhow!("Device `{}` does not support the `{}` command", device_identifier, command));
+        }
+
         controller.execute(&device, command, Vec::new())?;
         println!("Executing `{}` on `{}`...", command, device.label());
         return Ok(());
