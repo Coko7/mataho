@@ -1,7 +1,15 @@
 [package]
 name = "tahoma-cli"
 version = "0.1.0"
+authors = ["Coko <91132775+Coko7@users.noreply.github.com>"]
 edition = "2021"
+description = "A cli to interact with a local Tahoma box"
+readme = "README.md"
+homepage = "https://github.com/Coko7/tahoma-cli"
+repository = "https://github.com/Coko7/tahoma-cli"
+license = "GPL-3.0-only"
+keywords = ["cli", "tahoma", "somfy", "clap-rs"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0"

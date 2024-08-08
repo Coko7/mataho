@@ -1,6 +1,6 @@
 # tahoma-cli
 
-A *re*-implementation of the CLI from [somfy-home-controller](https://github.com/coko7/somfy-home-controller) in rust.
+A rust port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
 
 ## 🛠️ Setup
 
