@@ -1,22 +1,71 @@
+use std::{
+    env,
+    fs::{self, File, OpenOptions},
+    io::{Read, Write},
+    path::Path,
+};
+
 use anyhow::anyhow;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 
 use crate::{
     api::{controller::TahomaSetupResponse, device::Device},
-    cli::model::DeviceGroup,
-    Configuration, DeviceTypeFilter, MatchMode,
+    cli::model::{DeviceGroup, DeviceTypeFilter, MatchMode},
 };
 
 pub struct MatahoService {
-    pub devices: Vec<Device>,
-    pub groups: Vec<DeviceGroup>,
+    devices: Vec<Device>,
+    groups: Vec<DeviceGroup>,
 }
 
 impl MatahoService {
-    pub fn new(response: TahomaSetupResponse, config: Configuration) -> MatahoService {
+    pub fn new(response: TahomaSetupResponse) -> MatahoService {
         MatahoService {
             devices: response.devices,
-            groups: config.groups,
+            groups: MatahoService::read_from_file(),
+        }
+    }
+
+    fn groups_file_path() -> String {
+        match env::var("MATAHO_CONFIG") {
+            Ok(path) => path,
+            Err(_) => {
+                let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
+                format!("{}/mataho/groups.json", config_home)
+            }
+        }
+    }
+
+    pub fn read_from_file() -> Vec<DeviceGroup> {
+        let file_path = Self::groups_file_path();
+
+        if !Path::new(&file_path).exists() {
+            return Vec::new();
+        }
+
+        let json = fs::read_to_string(file_path).expect("Failed to rerad file");
+        let groups: Vec<DeviceGroup> = serde_json::from_str(&json).expect("cwewe");
+
+        groups
+    }
+
+    pub fn write_to_file(&self) -> std::io::Result<()> {
+        let file_path = Self::groups_file_path();
+
+        let json = serde_json::to_string(&self.groups).expect("Failed to serialize groups");
+        fs::write(file_path, json)?;
+        Ok(())
+    }
+
+    pub fn print_groups(&self) {
+        if self.groups.len() == 0 {
+            println!("No group");
+            return;
+        }
+
+        println!("{} groups:", self.groups.len());
+        for group in self.groups.iter() {
+            println!("- {}", group.name())
         }
     }
 
@@ -27,6 +76,72 @@ impl MatahoService {
             }
         }
     }
+
+    pub fn find_group_by_name(&self, name: &str) -> Option<&DeviceGroup> {
+        self.groups.iter().find(|group| group.name() == name)
+    }
+
+    pub fn find_group_by_name_mut(&mut self, name: &str) -> Option<&mut DeviceGroup> {
+        self.groups.iter_mut().find(|group| group.name() == name)
+    }
+
+    pub fn create_group(&mut self, name: &str) -> Result<(), anyhow::Error> {
+        let duplicate = self.find_group_by_name(name);
+        if duplicate.is_some() {
+            return Err(anyhow!(
+                "Cannot create group because `{}` is already being used",
+                name
+            ));
+        }
+
+        let group = DeviceGroup::new(name);
+        self.groups.push(group);
+        self.write_to_file()?;
+
+        Ok(())
+    }
+
+    pub fn delete_group(&mut self, name: &str) -> Result<(), anyhow::Error> {
+        if let Some(index) = self.groups.iter().position(|group| group.name() == name) {
+            self.groups.remove(index);
+            self.write_to_file()?;
+            return Ok(());
+        }
+
+        Err(anyhow!("No such group: `{}`", name))
+    }
+
+    pub fn find_group(&self, device: &Device) -> Option<&DeviceGroup> {
+        for group in self.groups.iter() {
+            if group.has_device(device.id()) {
+                return Some(&group);
+            }
+        }
+
+        None
+    }
+
+    pub fn find_group_mut(&mut self, device: &Device) -> Option<&mut DeviceGroup> {
+        for group in self.groups.iter_mut() {
+            if group.has_device(device.id()) {
+                return Some(group);
+            }
+        }
+
+        None
+    }
+
+    // pub fn add_to_group(&mut self, group_name: &str, device: &str) -> Result<(), anyhow::Error> {
+    //     let id = {
+    //         let device = self.get_device(device, MatchMode::Fuzzy).unwrap();
+    //         device.id().clone()
+    //     };
+    //
+    //     let group = self.find_group_by_name_mut(group_name).unwrap();
+    //     group.add_device(id);
+    //
+    //     Ok(())
+    // }
 
     pub fn print_device_info(&self, device: &Device) {
         println!("- label: {}", device.label());

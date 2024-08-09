@@ -27,8 +27,8 @@ fn main() -> Result<()> {
     let config = read_config(&config_path)?;
     let controller = TahomaApiController::new(&config);
 
-    let mataho_service = MatahoService::new(controller.get_setup()?, config);
-    process_args(args, &controller, &mataho_service)?;
+    let mut mataho_service = MatahoService::new(controller.get_setup()?);
+    process_args(args, &controller, &mut mataho_service)?;
 
     Ok(())
 }
@@ -46,7 +46,7 @@ fn read_config(path: &str) -> Result<Configuration> {
 fn process_args(
     args: Cli,
     controller: &TahomaApiController,
-    mataho_service: &MatahoService,
+    mataho_service: &mut MatahoService,
 ) -> Result<()> {
     match args.command {
         Commands::List { filter } => Ok(mataho_service.print_devices(filter)),
@@ -68,14 +68,22 @@ fn process_args(
             match_mode,
         ),
         Commands::Group { command } => match command {
-            GroupCommands::List {} => {
-                println!("{} groups:", mataho_service.groups.len());
-                for group in mataho_service.groups.iter() {
-                    println!("- {}", group.name)
-                }
+            GroupCommands::List {} => Ok(mataho_service.print_groups()),
+            GroupCommands::CreateGroup { name } => {
+                mataho_service.create_group(&name.to_string_lossy())?;
                 Ok(())
             }
-            _ => Ok(()),
+            GroupCommands::DeleteGroup { name } => {
+                mataho_service.delete_group(&name.to_string_lossy())?;
+                Ok(())
+            }
+            GroupCommands::AddToGroup { group, device } => {
+                // mataho_service.add_to_group(&group.to_string_lossy(), &device.to_string_lossy())?;
+                Err(anyhow!("Not Implemented Yet!"))
+            }
+            GroupCommands::RemoveFromGroup { group, device } => {
+                Err(anyhow!("Not Implemented Yet!"))
+            }
         },
     }
 }

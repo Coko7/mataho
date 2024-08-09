@@ -77,10 +77,20 @@ pub enum GroupCommands {
         name: OsString
     },
     /// Add a device to an existing group
-    #[command(name = "add")]
+    #[command(name = "join")]
     AddToGroup {
         /// Name of the group in which to add the device
-        group: OsString
+        group: OsString,
+        /// ID or label of the device. See match-mode for label matching
+        device: OsString,
+    },
+    /// Remove a device from an exiting group
+    #[command(name = "leave")]
+    RemoveFromGroup {
+        /// Name of the group from which to remove the device
+        group: OsString,
+        /// ID or label of the device. See match-mode for label matching
+        device: OsString,
     },
     /// Delete a group
     #[command(name = "delete")]

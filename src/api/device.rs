@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use crate::DeviceTypeFilter;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Device {
     label: String,
 
@@ -55,7 +55,7 @@ impl fmt::Display for Device {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DeviceDefinition {
     #[serde(rename = "commands")]
     actions: Vec<DeviceAction>,
@@ -67,7 +67,7 @@ impl DeviceDefinition {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DeviceAction {
     #[serde(rename = "nparams")]
     params_count: i32,
