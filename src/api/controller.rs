@@ -1,22 +1,23 @@
 use anyhow::anyhow;
+use serde::Deserialize;
 use serde_json::json;
 
 use crate::Configuration;
 
-use super::model::{Device, TahomaSetup};
+use super::device::Device;
 
-pub struct TahomaController {
+pub struct TahomaApiController {
     hostname: String,
     port: i32,
     api_token: String,
 }
 
-impl TahomaController {
-    pub fn new(config: Configuration) -> TahomaController {
-        TahomaController {
-            hostname: config.hostname,
-            port: config.port,
-            api_token: config.api_token,
+impl TahomaApiController {
+    pub fn new(configuration: &Configuration) -> TahomaApiController {
+        TahomaApiController {
+            hostname: configuration.hostname.clone(),
+            port: configuration.port,
+            api_token: configuration.api_token.clone(),
         }
     }
 
@@ -27,7 +28,7 @@ impl TahomaController {
             .unwrap()
     }
 
-    pub fn get_setup(&self) -> Result<TahomaSetup, reqwest::Error> {
+    pub fn get_setup(&self) -> Result<TahomaSetupResponse, reqwest::Error> {
         let client = Self::get_client();
 
         let res = client
@@ -80,4 +81,9 @@ impl TahomaController {
     fn endpoint(&self, path: &str) -> String {
         format!("{}:{}/{}", self.hostname, self.port, path)
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TahomaSetupResponse {
+    pub devices: Vec<Device>,
 }
