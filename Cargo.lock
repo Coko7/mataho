@@ -1128,7 +1128,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tahoma-cli"
+name = "tahoma"
 version = "0.1.0"
 dependencies = [
  "anyhow",
