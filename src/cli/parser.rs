@@ -27,7 +27,7 @@ pub enum Commands {
             value_enum)]
         filter: DeviceTypeFilter,
     },
-    /// Get information about a particular device (id, label, supported commands, etc.)
+    /// Get information about a particular device (id, label, supported actions, etc.)
     Info {
         /// Label, ID or URL of a device
         device: OsString,
@@ -42,7 +42,7 @@ pub enum Commands {
             value_enum)]
         match_mode: MatchMode
     },
-    /// Execute a Tahoma command on a single device
+    /// Execute a Tahoma action on a single device
     Exec {
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
@@ -72,7 +72,7 @@ pub enum GroupCommands {
     List { },
     /// Create a new group
     #[command(name = "create")]
-    CreateGroup {
+    Create {
         /// Name of the group
         name: OsString
     },
@@ -94,9 +94,9 @@ pub enum GroupCommands {
     },
     /// Delete a group
     #[command(name = "delete")]
-    DeleteGroup {
+    Delete {
         /// Name of the group
         name: OsString
-    }
+    },
 }
 

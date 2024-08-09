@@ -69,20 +69,22 @@ fn process_args(
         ),
         Commands::Group { command } => match command {
             GroupCommands::List {} => Ok(mataho_service.print_groups()),
-            GroupCommands::CreateGroup { name } => {
+            GroupCommands::Create { name } => {
                 mataho_service.create_group(&name.to_string_lossy())?;
                 Ok(())
             }
-            GroupCommands::DeleteGroup { name } => {
+            GroupCommands::Delete { name } => {
                 mataho_service.delete_group(&name.to_string_lossy())?;
                 Ok(())
             }
             GroupCommands::AddToGroup { group, device } => {
-                // mataho_service.add_to_group(&group.to_string_lossy(), &device.to_string_lossy())?;
-                Err(anyhow!("Not Implemented Yet!"))
+                mataho_service.add_to_group(&group.to_string_lossy(), &device.to_string_lossy())?;
+                Ok(())
             }
             GroupCommands::RemoveFromGroup { group, device } => {
-                Err(anyhow!("Not Implemented Yet!"))
+                mataho_service
+                    .remove_from_group(&group.to_string_lossy(), &device.to_string_lossy())?;
+                Ok(())
             }
         },
     }

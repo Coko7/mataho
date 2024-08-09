@@ -65,7 +65,14 @@ impl MatahoService {
 
         println!("{} groups:", self.groups.len());
         for group in self.groups.iter() {
-            println!("- {}", group.name())
+            let device_labels: String = group
+                .devices()
+                .iter()
+                .map(|device_id| format!("`{}`", self.get_device_by_id(device_id).unwrap().label()))
+                .collect::<Vec<String>>()
+                .join(", ");
+
+            println!("- {}: {}", group.name(), &device_labels);
         }
     }
 
@@ -111,37 +118,39 @@ impl MatahoService {
         Err(anyhow!("No such group: `{}`", name))
     }
 
-    pub fn find_group(&self, device: &Device) -> Option<&DeviceGroup> {
-        for group in self.groups.iter() {
-            if group.has_device(device.id()) {
-                return Some(&group);
-            }
+    pub fn add_to_group(&mut self, group_name: &str, device: &str) -> Result<(), anyhow::Error> {
+        let device_id = {
+            let device = self.get_device(device, MatchMode::Fuzzy)?;
+            device.id().to_string()
+        };
+
+        if let Some(group) = self.find_group_by_name_mut(group_name) {
+            group.add_device(&device_id)?;
+            self.write_to_file()?;
+            return Ok(());
         }
 
-        None
+        Err(anyhow!("No such group: `{}`", group_name))
     }
 
-    pub fn find_group_mut(&mut self, device: &Device) -> Option<&mut DeviceGroup> {
-        for group in self.groups.iter_mut() {
-            if group.has_device(device.id()) {
-                return Some(group);
-            }
+    pub fn remove_from_group(
+        &mut self,
+        group_name: &str,
+        device: &str,
+    ) -> Result<(), anyhow::Error> {
+        let device_id = {
+            let device = self.get_device(device, MatchMode::Fuzzy)?;
+            device.id().to_string()
+        };
+
+        if let Some(group) = self.find_group_by_name_mut(group_name) {
+            group.remove_device(&device_id)?;
+            self.write_to_file()?;
+            return Ok(());
         }
 
-        None
+        Err(anyhow!("No such group: `{}`", group_name))
     }
-
-    // pub fn add_to_group(&mut self, group_name: &str, device: &str) -> Result<(), anyhow::Error> {
-    //     let id = {
-    //         let device = self.get_device(device, MatchMode::Fuzzy).unwrap();
-    //         device.id().clone()
-    //     };
-    //
-    //     let group = self.find_group_by_name_mut(group_name).unwrap();
-    //     group.add_device(id);
-    //
-    //     Ok(())
-    // }
 
     pub fn print_device_info(&self, device: &Device) {
         println!("- label: {}", device.label());

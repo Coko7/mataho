@@ -39,6 +39,10 @@ impl DeviceGroup {
         &self.name
     }
 
+    pub fn devices(&self) -> &Vec<String> {
+        &self.devices
+    }
+
     pub fn has_device(&self, device_id: &str) -> bool {
         self.devices.iter().any(|id| id == device_id)
     }
