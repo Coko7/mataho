@@ -1,10 +1,10 @@
-# tahoma-cli
+# mataho
 
 A rust port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
 
 ## 🛠️ Setup
 
-1. Create a `tahoma-cli` directory in `$XDG_CONFIG_HOME`
+1. Create a `mataho` directory in `$XDG_CONFIG_HOME`
 2. Create `config.json` in this new directory and put the following inside:
 ```json
 {
@@ -14,7 +14,7 @@ A rust port of the cli from my [somfy-home-controller](https://github.com/coko7/
 }
 ```
 
-*NOTE: If you want to use a different config path, you can do so by setting the `$TAHOMA_CLI_CONFIG` env variable.*
+*NOTE: If you want to use a different config path, you can do so by setting the `$MATAHO_CONFIG` env variable.*
 
 ## 🐚 Usage
 

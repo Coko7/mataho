@@ -597,6 +597,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
 
 [[package]]
+name = "mataho"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "fuzzy-matcher",
+ "nucleo",
+ "reqwest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1125,19 +1138,6 @@ checksum = "a75fb188eb626b924683e3b95e3a48e63551fcfb51949de2f06a9d91dbee93c9"
 dependencies = [
  "core-foundation-sys",
  "libc",
-]
-
-[[package]]
-name = "tahoma"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "fuzzy-matcher",
- "nucleo",
- "reqwest",
- "serde",
- "serde_json",
 ]
 
 [[package]]

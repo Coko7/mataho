@@ -12,11 +12,11 @@ mod tahoma;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let config_path = match env::var("TAHOMA_CLI_CONFIG") {
+    let config_path = match env::var("MATAHO_CONFIG") {
         Ok(path) => path,
         Err(_) => {
             let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
-            format!("{}/tahoma-cli/config.json", config_home)
+            format!("{}/mataho/config.json", config_home)
         }
     };
 
@@ -48,7 +48,7 @@ fn read_config(path: &str) -> Result<Configuration> {
 }
 
 #[derive(Debug, Parser)]
-#[command(name = "tahoma")]
+#[command(name = "mataho")]
 #[command(about = "Interact with your Tahoma box in the terminal", long_about = None)]
 struct Cli {
     #[command(subcommand)]
