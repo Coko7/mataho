@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use serde::Deserialize;
 use std::{env, ffi::OsString, fs};
 use tahoma::{
@@ -48,7 +48,7 @@ fn read_config(path: &str) -> Result<Configuration> {
 }
 
 #[derive(Debug, Parser)]
-#[command(name = "taho")]
+#[command(name = "tahoma")]
 #[command(about = "Interact with your Tahoma box in the terminal", long_about = None)]
 struct Cli {
     #[command(subcommand)]
@@ -57,7 +57,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// List local devices
+    /// Print the list of known local devices
     List {
         /// Only display a subcategory of devices
         #[arg(
@@ -70,19 +70,50 @@ enum Commands {
             value_enum)]
         filter: DeviceTypeFilter,
     },
-    /// List all commands supported by a device
-    #[command(name = "list-cmds")]
-    ListCommands {
+    /// Get information about a particular device (id, label, supported commands, etc.)
+    Info {
         /// Label, ID or URL of a device
         device: OsString,
+        /// Match mode for the device 
+        #[arg(
+            long, 
+            require_equals = true,
+            value_name = "MODE",
+            num_args = 0..=1,
+            default_value_t = MatchMode::Fuzzy,
+            default_missing_value = "fuzzy",
+            value_enum)]
+        match_mode: MatchMode
     },
-    /// Run a Tahoma command on a single device
-    Run {
-        /// Name of the command (see list-cmds for help)
-        command: OsString,
-        /// ID or label of the device. Fuzzy matching is used
+    /// Execute a Tahoma command on a single device
+    Exec {
+        /// ID or label of the device. See match-mode for label matching
         device: OsString,
+        /// Match mode for the device 
+        #[arg(
+            long, 
+            require_equals = true,
+            value_name = "MODE",
+            num_args = 0..=1,
+            default_value_t = MatchMode::Fuzzy,
+            default_missing_value = "fuzzy",
+            value_enum)]
+        match_mode: MatchMode,
+        /// Name of the command (see list-cmds for help)
+        command: OsString
     },
+    // RunMulti {
+    //     /// Name of the command (see list-cmds for help)
+    //     command: OsString,
+    //     /// A string 
+    //     devices_query: OsString,
+    // }
+}
+
+#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
+enum MatchMode {
+    Exact,
+    Fuzzy
 }
 
 fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -> Result<()> {
@@ -90,32 +121,30 @@ fn process_args(args: Cli, controller: &TahomaController, setup: &TahomaSetup) -
         Commands::List { filter } => {
             Ok(setup.print_devices(filter))
         }
-        Commands::ListCommands { device } => {
-            if let Some(device) = setup.get_device(&device.to_string_lossy()) {
-                return Ok(setup.print_device_commands(&device));
+        Commands::Info { device, match_mode } => {
+            match setup.get_device(&device.to_string_lossy(), match_mode) {
+                Ok(device) => Ok(setup.print_device_info(&device)),
+                Err(err) => Err(err)
             }
-
-            Err(anyhow!("Failed to find a local device that matches `{}`", device.to_string_lossy()))
         }
-        Commands::Run { command, device } => {
-            execute_on_device(&controller, &setup, &device.to_string_lossy(), &command.to_string_lossy())
+        Commands::Exec { command, device, match_mode } => {
+            execute_on_device(&controller, &setup, &device.to_string_lossy(), &command.to_string_lossy(), match_mode)
         }
     }
 }
 
-fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str) -> Result<()> {
-    if let Some(device) = setup.get_device(&device_identifier) {
-        // Ensure valid command
-        if let Some(command_obj) = device.definition().commands().iter().find(|cmd| cmd.name() == command) {
-            controller.execute(&device, command, Vec::new())?;
-            println!("Executing `{}` on `{}`...", command, device.label());
+fn execute_on_device(controller: &TahomaController, setup: &TahomaSetup, device_identifier: &str, command: &str, match_mode: MatchMode) -> Result<()> {
+    match setup.get_device(&device_identifier, match_mode) {
+        Ok(device) => {
+            if let Some(command_obj) = device.definition().commands().iter().find(|cmd| cmd.name() == command) {
+                controller.execute(&device, command, Vec::new())?;
+                println!("Executing `{}` on `{}`...", command, device.label());
 
-            return Ok(());
+                return Ok(());
+            }
+
+            Err(anyhow!("Device `{}` does not support the `{}` command", device_identifier, command))
         }
-
-        return Err(anyhow!("Device `{}` does not support the `{}` command", device_identifier, command));
-
+        Err(err) => Err(err)
     }
-
-    Err(anyhow!("No such  device: `{}`", device_identifier))
 }

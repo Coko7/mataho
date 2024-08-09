@@ -1,8 +1,11 @@
 use std::fmt;
 
+use anyhow::anyhow;
 use clap::ValueEnum;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use serde::Deserialize;
+
+use crate::MatchMode;
 
 #[derive(Debug, Deserialize)]
 pub struct TahomaSetup {
@@ -18,32 +21,68 @@ impl TahomaSetup {
         }
     }
 
-    pub fn print_device_commands(&self, device: &Device) {
-        println!("Showing commands for `{}`:", device.label());
-        for command in device.definition.commands.iter() {
-            println!("- {}", command);
+    pub fn print_device_info(&self, device: &Device) {
+        println!("- label: {}", device.label());
+        println!("- url: {}", device.url());
+        println!("- id: {} (last part of URL)", device.id());
+        println!("- commands:");
+
+        for command in device.definition().commands().iter() {
+            println!("\t- {}", command);
         }
     }
 
-    pub fn get_device_by_label(&self, label: &str) -> Option<&Device> {
+    pub fn get_device_by_label(
+        &self,
+        label: &str,
+        match_mode: MatchMode,
+    ) -> Result<&Device, anyhow::Error> {
         let label = label.to_lowercase();
 
         let matcher = SkimMatcherV2::default();
-        let mut best_score = -1;
-        let mut pick: Option<&Device> = None;
 
-        // TODO COCO: What do we do if multiple devices share top score???
+        let mut best_score = -1;
+        let mut devices_scores: Vec<(&Device, i64)> = Vec::new();
+
         for device in self.devices.iter() {
+            if device.label().to_lowercase() == label {
+                return Ok(device);
+            }
+
+            // Skip fuzzy matching when match mode is `exact`
+            if match_mode == MatchMode::Exact {
+                continue;
+            }
+
             if let Some(score) = matcher.fuzzy_match(&device.label.to_lowercase(), &label) {
                 // println!("{} -> {}", device.label, score);
+                devices_scores.push((device, score));
                 if score > best_score {
                     best_score = score;
-                    pick = Some(device);
                 }
             }
         }
 
-        pick
+        let mut best_candidates = devices_scores.iter().filter(|tuple| tuple.1 == best_score);
+
+        // More than one candidate
+        if best_candidates.clone().count() > 1 {
+            let candidates_labels: String = best_candidates
+                .map(|tuple| format!("`{}`", tuple.0.label))
+                .collect::<Vec<String>>()
+                .join(", ");
+
+            return Err(anyhow!(
+                "Failed to find a single best match, there are several candidates: {}",
+                candidates_labels
+            ));
+        }
+
+        if let Some(best_match) = best_candidates.next() {
+            return Ok(best_match.0);
+        }
+
+        Err(anyhow!("Failed to find a device that matches: `{}`", label))
     }
 
     pub fn get_device_by_id(&self, device_id: &str) -> Option<&Device> {
@@ -56,9 +95,16 @@ impl TahomaSetup {
         None
     }
 
-    pub fn get_device(&self, identifier: &str) -> Option<&Device> {
-        self.get_device_by_id(identifier)
-            .or_else(|| self.get_device_by_label(identifier))
+    pub fn get_device(
+        &self,
+        identifier: &str,
+        match_mode: MatchMode,
+    ) -> Result<&Device, anyhow::Error> {
+        if let Some(device) = self.get_device_by_id(identifier) {
+            return Ok(device);
+        }
+
+        self.get_device_by_label(identifier, match_mode)
     }
 }
 
