@@ -48,9 +48,15 @@ Display local devices:
 ```
 $ mataho ls
 
-00000001: Front gate (io:SlidingDiscreteGateOpenerIOComponent)
-00000002: Garage (io:GarageOpenerIOComponent)
-00000003: Coko's room (io:RollerShutterWithLowSpeedManagementIOComponent)
++----------+-----------------+----------------+
+| ID       | Label           | Type           |
++----------+-----------------+----------------+
+| 00000001 | Front gate      | sliding gate   |
++----------+-----------------+----------------+
+| 00000002 | Garage          | garage opener  |
++----------+-----------------+----------------+
+| 00000003 | Coko's room     | roller shutter |
++----------+-----------------+----------------+
 ```
 
 Execute a command/action on a particular device (fuzzy matching is used to find the device):
