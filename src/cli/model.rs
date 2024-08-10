@@ -5,8 +5,6 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::api::device::Device;
-
 #[derive(Debug, Deserialize)]
 pub struct Configuration {
     pub hostname: String,

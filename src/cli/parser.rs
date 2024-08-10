@@ -56,7 +56,7 @@ pub enum Commands {
             default_missing_value = "fuzzy",
             value_enum)]
         match_mode: MatchMode,
-        /// Name of the command (see list-cmds for help)
+        /// Name of the command
         command: OsString
     },
     /// Create and manage groups of devices
@@ -97,6 +97,13 @@ pub enum GroupCommands {
     Delete {
         /// Name of the group
         name: OsString
+    },
+    /// Execute a Tahoma action on a group of devices
+    Exec {
+        /// Name of the group
+        group: OsString,
+        /// Name of the command
+        command: OsString
     },
 }
 

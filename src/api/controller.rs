@@ -78,6 +78,53 @@ impl TahomaApiController {
         }
     }
 
+    pub fn execute_multiple(
+        &self,
+        devices: Vec<&Device>,
+        command: &str,
+        params: Vec<String>,
+    ) -> Result<(), anyhow::Error> {
+        let client = Self::get_client();
+
+        let mut all_actions = Vec::new();
+        for device in devices.iter() {
+            let action = json!({
+                "commands": [
+                    {
+                        "name": command,
+                        "parameters": params
+                    }
+                ],
+                "deviceURL": device.url()
+            });
+
+            all_actions.push(action);
+        }
+
+        let payload = json!({
+            "label": format!("Exec {} on {} devices", command, devices.len()),
+            "actions": all_actions
+        });
+
+        println!("{:#?}", payload);
+
+        let res = client
+            .post(&self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply"))
+            .bearer_auth(&self.api_token)
+            .json(&payload)
+            .send()?;
+
+        // println!("{:#?}", res);
+
+        match res.error_for_status() {
+            Ok(_res) => Ok(()),
+            Err(err) => Err(anyhow!(
+                "Failed to execute command on multiple devices: {}",
+                err
+            )),
+        }
+    }
+
     fn endpoint(&self, path: &str) -> String {
         format!("{}:{}/{}", self.hostname, self.port, path)
     }

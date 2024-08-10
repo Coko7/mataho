@@ -5,7 +5,7 @@ use cli::{
     parser::{Cli, Commands, GroupCommands},
 };
 use mataho::service::MatahoService;
-use std::{env, fs};
+use std::fs;
 
 use api::controller::TahomaApiController;
 
@@ -16,14 +16,7 @@ mod mataho;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let config_path = match env::var("MATAHO_CONFIG") {
-        Ok(path) => path,
-        Err(_) => {
-            let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
-            format!("{}/mataho/config.json", config_home)
-        }
-    };
-
+    let config_path = MatahoService::config_file_path();
     let config = read_config(&config_path)?;
     let controller = TahomaApiController::new(&config);
 
@@ -51,10 +44,8 @@ fn process_args(
     match args.command {
         Commands::List { filter } => Ok(mataho_service.print_devices(filter)),
         Commands::Info { device, match_mode } => {
-            match mataho_service.get_device(&device.to_string_lossy(), match_mode) {
-                Ok(device) => Ok(mataho_service.print_device_info(&device)),
-                Err(err) => Err(err),
-            }
+            let device = mataho_service.find_device(&device.to_string_lossy(), match_mode)?;
+            Ok(mataho_service.print_device_info(&device))
         }
         Commands::Exec {
             command,
@@ -67,56 +58,73 @@ fn process_args(
             &command.to_string_lossy(),
             match_mode,
         ),
-        Commands::Group { command } => match command {
-            GroupCommands::List {} => Ok(mataho_service.print_groups()),
-            GroupCommands::Create { name } => {
-                mataho_service.create_group(&name.to_string_lossy())?;
-                Ok(())
+        Commands::Group { command } => {
+            match command {
+                GroupCommands::List {} => Ok(mataho_service.print_groups()),
+                GroupCommands::Create { name } => {
+                    Ok(mataho_service.create_group(&name.to_string_lossy())?)
+                }
+                GroupCommands::Delete { name } => {
+                    Ok(mataho_service.delete_group(&name.to_string_lossy())?)
+                }
+                GroupCommands::AddToGroup { group, device } => Ok(mataho_service
+                    .add_to_group(&group.to_string_lossy(), &device.to_string_lossy())?),
+                GroupCommands::RemoveFromGroup { group, device } => Ok(mataho_service
+                    .remove_from_group(&group.to_string_lossy(), &device.to_string_lossy())?),
+                GroupCommands::Exec { group, command } => execute_on_group(
+                    controller,
+                    mataho_service,
+                    &group.to_string_lossy(),
+                    &command.to_string_lossy(),
+                ),
             }
-            GroupCommands::Delete { name } => {
-                mataho_service.delete_group(&name.to_string_lossy())?;
-                Ok(())
-            }
-            GroupCommands::AddToGroup { group, device } => {
-                mataho_service.add_to_group(&group.to_string_lossy(), &device.to_string_lossy())?;
-                Ok(())
-            }
-            GroupCommands::RemoveFromGroup { group, device } => {
-                mataho_service
-                    .remove_from_group(&group.to_string_lossy(), &device.to_string_lossy())?;
-                Ok(())
-            }
-        },
+        }
     }
+}
+
+fn execute_on_group(
+    controller: &TahomaApiController,
+    mataho_service: &MatahoService,
+    group: &str,
+    command: &str,
+) -> Result<()> {
+    if let Some(group) = mataho_service.find_group_by_name(group) {
+        let devices = mataho_service.get_group_devices(group);
+
+        if !devices.iter().all(|device| device.supports_action(command)) {
+            return Err(anyhow!(
+                "Given command is not supported by all devices in the group"
+            ));
+        }
+
+        controller.execute_multiple(devices, command, Vec::new())?;
+
+        println!("Executing `{}` on group `{}`...", command, group.name());
+        return Ok(());
+    }
+
+    Err(anyhow!("No such group: `{}`", group))
 }
 
 fn execute_on_device(
     controller: &TahomaApiController,
-    matho_service: &MatahoService,
+    mataho_service: &MatahoService,
     device_identifier: &str,
     command: &str,
     match_mode: MatchMode,
 ) -> Result<()> {
-    match matho_service.get_device(&device_identifier, match_mode) {
-        Ok(device) => {
-            if let Some(command_obj) = device
-                .definition()
-                .actions()
-                .iter()
-                .find(|cmd| cmd.name() == command)
-            {
-                controller.execute(&device, command, Vec::new())?;
-                println!("Executing `{}` on `{}`...", command, device.label());
+    let device = mataho_service.find_device(&device_identifier, match_mode)?;
 
-                return Ok(());
-            }
-
-            Err(anyhow!(
-                "Device `{}` does not support the `{}` command",
-                device_identifier,
-                command
-            ))
-        }
-        Err(err) => Err(err),
+    if !device.supports_action(command) {
+        return Err(anyhow!(
+            "Device `{}` does not support the `{}` command",
+            device_identifier,
+            command
+        ));
     }
+
+    controller.execute(&device, command, Vec::new())?;
+
+    println!("Executing `{}` on `{}`...", command, device.label());
+    Ok(())
 }

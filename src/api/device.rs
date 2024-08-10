@@ -17,6 +17,11 @@ pub struct Device {
 }
 
 impl Device {
+    pub fn id(&self) -> &str {
+        let parts: Vec<&str> = self.url.split('/').collect();
+        parts.last().unwrap()
+    }
+
     pub fn label(&self) -> &str {
         &self.label
     }
@@ -25,13 +30,15 @@ impl Device {
         &self.definition
     }
 
-    pub fn id(&self) -> &str {
-        let parts: Vec<&str> = self.url.split('/').collect();
-        parts.last().unwrap()
-    }
-
     pub fn url(&self) -> &str {
         &self.url
+    }
+
+    pub fn supports_action(&self, action: &str) -> bool {
+        self.definition()
+            .actions()
+            .iter()
+            .any(|dev_action| dev_action.name() == action)
     }
 
     pub fn matches(&self, filter: DeviceTypeFilter) -> bool {
