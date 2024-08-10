@@ -63,9 +63,8 @@ impl MatahoService {
     }
 
     fn read_groups_from_file() -> Result<Vec<DeviceGroup>, anyhow::Error> {
-        let file_path = Self::groups_file_path()?;
-
-        let json = fs::read_to_string(file_path)?;
+        let path = Self::groups_file_path()?;
+        let json = fs::read_to_string(path)?;
         let groups: Vec<DeviceGroup> = serde_json::from_str(&json)?;
 
         Ok(groups)
@@ -97,7 +96,12 @@ impl MatahoService {
                 .collect::<Vec<String>>()
                 .join(", ");
 
-            println!("- {}: {}", group.name(), &device_labels);
+            println!(
+                "- {}({}): {}",
+                group.name(),
+                group.devices().len(),
+                &device_labels
+            );
         }
     }
 

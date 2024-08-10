@@ -15,6 +15,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Print the list of known local devices
+    #[command(visible_alias("ls"))]
     List {
         /// Only display a subcategory of devices
         #[arg(
@@ -60,6 +61,7 @@ pub enum Commands {
         command: OsString
     },
     /// Create and manage groups of devices
+    #[command(visible_alias("grp"))]
     Group {
         #[command(subcommand)]
         command: GroupCommands
@@ -69,6 +71,7 @@ pub enum Commands {
 #[derive(Debug, Subcommand)]
 pub enum GroupCommands {
     /// List all groups
+    #[command(visible_alias("ls"))]
     List { },
     /// Create a new group
     #[command(name = "create")]
