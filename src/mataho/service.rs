@@ -79,6 +79,19 @@ impl MatahoService {
         Ok(())
     }
 
+    pub fn create_groups_file() -> Result<(), anyhow::Error> {
+        let file_path = Self::groups_file_path()?;
+        if let Some(config_dir) = file_path.parent() {
+            fs::create_dir_all(config_dir)?;
+        }
+
+        let default_groups: Vec<DeviceGroup> = Vec::new();
+        let json = serde_json::to_string(&default_groups)?;
+        fs::write(&file_path, json)?;
+
+        Ok(())
+    }
+
     fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<(), anyhow::Error> {
         let file_path = Self::groups_file_path()?;
 

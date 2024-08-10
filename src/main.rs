@@ -21,6 +21,11 @@ fn main() -> Result<()> {
         MatahoService::create_config_file()?;
     }
 
+    let groups_file_path = MatahoService::groups_file_path()?;
+    if !groups_file_path.exists() {
+        MatahoService::create_groups_file()?;
+    }
+
     let config = read_config(config_file_path)?;
     let controller = TahomaApiController::new(&config);
 
