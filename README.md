@@ -1,11 +1,16 @@
 # mataho
 
-A rust port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
+A rust command line tool that allows you to interact with your local Tahoma box.
+This is a port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
+
+New features have been added:
+- Fuzzy matching for device labels
+- Group management
+- Executing an action on a group of devices
 
 ## 🛠️ Setup
 
-1. Create a `mataho` directory in `$XDG_CONFIG_HOME`
-2. Create `config.json` in this new directory and put the following inside:
+Create a config file at `$HOME/.config/mataho/config.json`:
 ```json
 {
     "hostname": "https://gateway-XXXX-XXXX-XXXX"
@@ -14,7 +19,9 @@ A rust port of the cli from my [somfy-home-controller](https://github.com/coko7/
 }
 ```
 
-*NOTE: If you want to use a different config path, you can do so by setting the `$MATAHO_CONFIG` env variable.*
+*NOTE: If you want to use a different path for the configuration direction, you can do so by setting the `$MATAHO_CONFIG` env variable.*
+
+*You must keep the filename as `config.json` though.*
 
 ## 🐚 Usage
 
@@ -27,10 +34,11 @@ Interact with your Tahoma box in the terminal
 Usage: mataho <COMMAND>
 
 Commands:
-  list  Print the list of known local devices
-  info  Get information about a particular device (id, label, supported commands, etc.)
-  exec  Execute a Tahoma command on a single device
-  help  Print this message or the help of the given subcommand(s)
+  list   Print the list of known local devices [aliases: ls]
+  info   Get information about a particular device (id, label, supported actions, etc.)
+  exec   Execute a Tahoma action on a single device
+  group  Create and manage groups of devices [aliases: grp]
+  help   Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help  Print help
@@ -38,7 +46,7 @@ Options:
 
 Display local devices:
 ```
-$ mataho list
+$ mataho ls
 
 00000001: Front gate (io:SlidingDiscreteGateOpenerIOComponent)
 00000002: Garage (io:GarageOpenerIOComponent)
@@ -50,6 +58,27 @@ Execute a command/action on a particular device (fuzzy matching is used to find 
 $ mataho exec coko open
 
 Executing `open` on `Coko's room`...
+```
+
+Manage groups:
+```
+$ mataho grp -h
+
+Create and manage groups of devices
+
+Usage: mataho group <COMMAND>
+
+Commands:
+  list    List all groups [aliases: ls]
+  create  Create a new group
+  join    Add a device to an existing group
+  leave   Remove a device from an exiting group
+  delete  Delete a group
+  exec    Execute a Tahoma action on a group of devices
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
 ```
 
 ## 📚 Resources
