@@ -1,7 +1,12 @@
-use std::{env, fs, path::Path};
+use core::panic;
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 use anyhow::anyhow;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use xdg::BaseDirectories;
 
 use crate::{
     api::{controller::TahomaSetupResponse, device::Device},
@@ -29,28 +34,36 @@ impl MatahoService {
         }
     }
 
-    pub fn config_file_path() -> String {
-        match env::var("MATAHO_CONFIG") {
-            Ok(path) => path,
-            Err(_) => {
-                let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
-                format!("{}/mataho/groups.json", config_home)
-            }
+    pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
+        let app_name = "mataho";
+        let mataho_config_var = "MATAHO_CONFIG";
+
+        if env::var(mataho_config_var).is_ok() {
+            return Ok(PathBuf::from(mataho_config_var));
         }
+
+        if let Ok(xdg_dirs) = BaseDirectories::new() {
+            let config_home = xdg_dirs.get_config_home();
+            return Ok(config_home.join(app_name));
+        }
+
+        if let Ok(home_dir) = env::var("HOME") {
+            return Ok(PathBuf::from(home_dir).join(".config").join(app_name));
+        }
+
+        Err(anyhow!("Failed to find config dir"))
     }
 
-    pub fn groups_file_path() -> String {
-        match env::var("MATAHO_GROUPS") {
-            Ok(path) => path,
-            Err(_) => {
-                let config_home = env::var("XDG_CONFIG_HOME").expect("XDG_CONFIG_HOME not set");
-                format!("{}/mataho/groups.json", config_home)
-            }
-        }
+    pub fn config_file_path() -> Result<PathBuf, anyhow::Error> {
+        Ok(Self::get_config_dir()?.join("config.json"))
+    }
+
+    pub fn groups_file_path() -> Result<PathBuf, anyhow::Error> {
+        Ok(Self::get_config_dir()?.join("groups.json"))
     }
 
     fn read_groups_from_file() -> Result<Vec<DeviceGroup>, anyhow::Error> {
-        let file_path = Self::groups_file_path();
+        let file_path = Self::groups_file_path()?;
 
         let json = fs::read_to_string(file_path)?;
         let groups: Vec<DeviceGroup> = serde_json::from_str(&json)?;
@@ -59,7 +72,7 @@ impl MatahoService {
     }
 
     fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<(), anyhow::Error> {
-        let file_path = Self::groups_file_path();
+        let file_path = Self::groups_file_path()?;
 
         let json = serde_json::to_string(groups)?;
         fs::write(file_path, json)?;
@@ -90,7 +103,7 @@ impl MatahoService {
 
     pub fn print_devices(&self, filter: DeviceTypeFilter) {
         for device in &self.devices {
-            if filter == DeviceTypeFilter::All || device.matches(filter) {
+            if filter == DeviceTypeFilter::All || device.has_type(filter) {
                 println!("{}", device);
             }
         }
@@ -128,8 +141,8 @@ impl MatahoService {
     }
 
     pub fn delete_group(&mut self, name: &str) -> Result<(), anyhow::Error> {
-        if let Some(index) = self.groups.iter().position(|group| group.name() == name) {
-            self.groups.remove(index);
+        if let Some(pos) = self.groups.iter().position(|group| group.name() == name) {
+            self.groups.remove(pos);
             Self::write_groups_to_file(&self.groups)?;
             return Ok(());
         }

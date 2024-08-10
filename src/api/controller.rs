@@ -106,7 +106,7 @@ impl TahomaApiController {
             "actions": all_actions
         });
 
-        println!("{:#?}", payload);
+        // println!("{:#?}", payload);
 
         let res = client
             .post(&self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply"))

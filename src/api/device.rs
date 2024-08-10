@@ -41,7 +41,7 @@ impl Device {
             .any(|dev_action| dev_action.name() == action)
     }
 
-    pub fn matches(&self, filter: DeviceTypeFilter) -> bool {
+    pub fn has_type(&self, filter: DeviceTypeFilter) -> bool {
         if filter == DeviceTypeFilter::All {
             return true;
         }

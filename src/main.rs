@@ -1,11 +1,11 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use cli::{
     model::{Configuration, DeviceTypeFilter, MatchMode},
     parser::{Cli, Commands, GroupCommands},
 };
 use mataho::service::MatahoService;
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use api::controller::TahomaApiController;
 
@@ -16,8 +16,8 @@ mod mataho;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let config_path = MatahoService::config_file_path();
-    let config = read_config(&config_path)?;
+    let config_path = MatahoService::config_file_path()?;
+    let config = read_config(config_path)?;
     let controller = TahomaApiController::new(&config);
 
     let mut mataho_service = MatahoService::new(controller.get_setup()?);
@@ -26,13 +26,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_config(path: &str) -> Result<Configuration> {
-    let json_content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read file `{}`", path))?;
-
-    let config: Configuration = serde_json::from_str(&json_content)
-        .with_context(|| format!("Failed to parse JSON from `{}`", path))?;
-
+fn read_config(path: PathBuf) -> Result<Configuration> {
+    let json_content = fs::read_to_string(path)?;
+    let config: Configuration = serde_json::from_str(&json_content)?;
     Ok(config)
 }
 
