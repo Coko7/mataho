@@ -2,6 +2,7 @@ use std::{env, fs, path::PathBuf};
 
 use anyhow::anyhow;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use prettytable::{row, Table};
 use xdg::BaseDirectories;
 
 use crate::{
@@ -128,11 +129,16 @@ impl MatahoService {
     }
 
     pub fn print_devices(&self, filter: DeviceTypeFilter) {
+        let mut table = Table::new();
+
+        table.add_row(row!["ID", "Label", "Type"]);
         for device in &self.devices {
             if filter == DeviceTypeFilter::All || device.has_type(filter) {
-                println!("{}", device);
+                table.add_row(row![device.id(), device.label(), device.device_type()]);
             }
         }
+
+        table.printstd();
     }
 
     pub fn find_group_by_name(&self, name: &str) -> Option<&DeviceGroup> {

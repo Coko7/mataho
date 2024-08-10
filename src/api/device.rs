@@ -26,6 +26,15 @@ impl Device {
         &self.label
     }
 
+    pub fn device_type(&self) -> &str {
+        match self.controllable_name.as_str() {
+            "io:GarageOpenerIOComponent" => "garage opener",
+            "io:SlidingDiscreteGateOpenerIOComponent" => "sliding gate",
+            "io:RollerShutterWithLowSpeedManagementIOComponent" => "roller shutter",
+            _ => "<unknown>",
+        }
+    }
+
     pub fn definition(&self) -> &DeviceDefinition {
         &self.definition
     }
