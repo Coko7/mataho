@@ -16,8 +16,12 @@ mod mataho;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let config_path = MatahoService::config_file_path()?;
-    let config = read_config(config_path)?;
+    let config_file_path = MatahoService::config_file_path()?;
+    if !config_file_path.exists() {
+        MatahoService::create_config_file()?;
+    }
+
+    let config = read_config(config_file_path)?;
     let controller = TahomaApiController::new(&config);
 
     let mut mataho_service = MatahoService::new(controller.get_setup()?);

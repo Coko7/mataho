@@ -1,8 +1,4 @@
-use core::panic;
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+use std::{env, fs, path::PathBuf};
 
 use anyhow::anyhow;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
@@ -10,7 +6,7 @@ use xdg::BaseDirectories;
 
 use crate::{
     api::{controller::TahomaSetupResponse, device::Device},
-    cli::model::{DeviceGroup, DeviceTypeFilter, MatchMode},
+    cli::model::{Configuration, DeviceGroup, DeviceTypeFilter, MatchMode},
 };
 
 pub struct MatahoService {
@@ -68,6 +64,19 @@ impl MatahoService {
         let groups: Vec<DeviceGroup> = serde_json::from_str(&json)?;
 
         Ok(groups)
+    }
+
+    pub fn create_config_file() -> Result<(), anyhow::Error> {
+        let file_path = Self::config_file_path()?;
+        if let Some(config_dir) = file_path.parent() {
+            fs::create_dir_all(config_dir)?;
+        }
+
+        let default_config = Configuration::new();
+        let json = serde_json::to_string(&default_config)?;
+        fs::write(&file_path, json)?;
+
+        Ok(())
     }
 
     fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<(), anyhow::Error> {

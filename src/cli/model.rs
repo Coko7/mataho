@@ -5,12 +5,22 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Configuration {
     pub hostname: String,
     pub port: i32,
     // pod: String,
     pub api_token: String,
+}
+
+impl Configuration {
+    pub fn new() -> Configuration {
+        Configuration {
+            hostname: "https://127.0.0.1".to_string(),
+            port: 8443,
+            api_token: "REPLACE_WITH_TOKEN".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
