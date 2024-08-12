@@ -1,8 +1,7 @@
-use std::fmt;
-
 use anyhow::anyhow;
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]

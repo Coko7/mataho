@@ -1,17 +1,17 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use std::{fs, path::PathBuf};
+
+mod api;
+mod cli;
+mod mataho;
+
+use api::controller::TahomaApiController;
 use cli::{
     model::{Configuration, DeviceTypeFilter, MatchMode},
     parser::{Cli, Commands, GroupCommands},
 };
 use mataho::service::MatahoService;
-use std::{fs, path::PathBuf};
-
-use api::controller::TahomaApiController;
-
-mod api;
-mod cli;
-mod mataho;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
@@ -104,7 +104,12 @@ fn execute_on_group(
 
         controller.execute_multiple(devices, command, Vec::new())?;
 
-        println!("Executing `{}` on group `{}`...", command, group.name());
+        println!(
+            "Executing `{}` on group `{} ({} devices)`...",
+            command,
+            group.name(),
+            group.devices().len()
+        );
         return Ok(());
     }
 

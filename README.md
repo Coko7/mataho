@@ -36,7 +36,7 @@ Usage: mataho <COMMAND>
 Commands:
   list   Print the list of known local devices [aliases: ls]
   info   Get information about a particular device (id, label, supported actions, etc.)
-  exec   Execute a Tahoma action on a single device
+  exec   Execute a Tahoma action on a single device [aliases: ex]
   group  Create and manage groups of devices [aliases: grp]
   help   Print this message or the help of the given subcommand(s)
 
@@ -61,7 +61,7 @@ $ mataho ls
 
 Execute a command/action on a particular device (fuzzy matching is used to find the device):
 ```
-$ mataho exec coko open
+$ mataho ex coko open
 
 Executing `open` on `Coko's room`...
 ```
@@ -77,10 +77,10 @@ Usage: mataho group <COMMAND>
 Commands:
   list    List all groups [aliases: ls]
   create  Create a new group
+  delete  Delete a group
   join    Add a device to an existing group
   leave   Remove a device from an exiting group
-  delete  Delete a group
-  exec    Execute a Tahoma action on a group of devices
+  exec    Execute a Tahoma action on a group of devices [aliases: ex]
   help    Print this message or the help of the given subcommand(s)
 
 Options:

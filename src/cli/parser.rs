@@ -1,6 +1,5 @@
-use std::ffi::OsString;
-
 use clap::{Parser, Subcommand};
+use std::ffi::OsString;
 
 use super::model::{DeviceTypeFilter, MatchMode};
 
@@ -30,7 +29,7 @@ pub enum Commands {
     },
     /// Get information about a particular device (id, label, supported actions, etc.)
     Info {
-        /// Label, ID or URL of a device
+        /// ID or label of the device. See match-mode for label matching
         device: OsString,
         /// Match mode for the device 
         #[arg(
@@ -44,6 +43,7 @@ pub enum Commands {
         match_mode: MatchMode
     },
     /// Execute a Tahoma action on a single device
+    #[command(visible_alias("ex"))]
     Exec {
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
@@ -79,10 +79,16 @@ pub enum GroupCommands {
         /// Name of the group
         name: OsString
     },
+    /// Delete a group
+    #[command(name = "delete")]
+    Delete {
+        /// Name of the group
+        name: OsString
+    },
     /// Add a device to an existing group
     #[command(name = "join")]
     AddToGroup {
-        /// Name of the group in which to add the device
+        /// Name of the group
         group: OsString,
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
@@ -95,13 +101,8 @@ pub enum GroupCommands {
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
     },
-    /// Delete a group
-    #[command(name = "delete")]
-    Delete {
-        /// Name of the group
-        name: OsString
-    },
     /// Execute a Tahoma action on a group of devices
+    #[command(visible_alias("ex"))]
     Exec {
         /// Name of the group
         group: OsString,
