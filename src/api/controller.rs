@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use log::{debug, info};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -31,20 +32,21 @@ impl TahomaApiController {
     pub fn get_setup(&self) -> Result<TahomaSetupResponse, reqwest::Error> {
         let client = Self::get_client();
 
-        let res = client
-            .get(self.endpoint("/enduser-mobile-web/1/enduserAPI/setup"))
-            .bearer_auth(&self.api_token)
-            .send()?;
+        let url = self.endpoint("/enduser-mobile-web/1/enduserAPI/setup");
+        info!("GET {}", url);
 
-        // println!("{:#?}", res);rus
-        Ok(res.json()?)
+        let res = client.get(url).bearer_auth(&self.api_token).send()?;
+        let res = res.json()?;
+        debug!("result: {:?}", res);
+
+        Ok(res)
     }
 
     pub fn execute(
         &self,
         device: &Device,
         command: &str,
-        params: Vec<String>,
+        params: &Vec<String>,
     ) -> Result<(), anyhow::Error> {
         let client = Self::get_client();
 
@@ -64,13 +66,16 @@ impl TahomaApiController {
             ]
         });
 
+        let url = self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply");
+        info!("POST {} {}", url, serde_json::to_string(&payload)?);
+
         let res = client
-            .post(&self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply"))
+            .post(url)
             .bearer_auth(&self.api_token)
             .json(&payload)
             .send()?;
 
-        // println!("{:#?}", res);
+        debug!("result: {:?}", res);
 
         match res.error_for_status() {
             Ok(_res) => Ok(()),
@@ -82,7 +87,7 @@ impl TahomaApiController {
         &self,
         devices: Vec<&Device>,
         command: &str,
-        params: Vec<String>,
+        params: &Vec<String>,
     ) -> Result<(), anyhow::Error> {
         let client = Self::get_client();
 
@@ -106,15 +111,16 @@ impl TahomaApiController {
             "actions": all_actions
         });
 
-        // println!("{:#?}", payload);
+        let url = self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply");
+        info!("POST {} {}", url, serde_json::to_string(&payload)?);
 
         let res = client
-            .post(&self.endpoint("/enduser-mobile-web/1/enduserAPI/exec/apply"))
+            .post(url)
             .bearer_auth(&self.api_token)
             .json(&payload)
             .send()?;
 
-        // println!("{:#?}", res);
+        debug!("result: {:?}", res);
 
         match res.error_for_status() {
             Ok(_res) => Ok(()),

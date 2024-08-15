@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use clap::ValueEnum;
+use log::error;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
@@ -56,6 +57,7 @@ impl DeviceGroup {
 
     pub fn add_device(&mut self, device_id: &str) -> Result<(), anyhow::Error> {
         if self.has_device(device_id) {
+            error!("Device `{}` already in group `{}`", device_id, self.name());
             return Err(anyhow!("Device already in group"));
         }
 
@@ -64,6 +66,7 @@ impl DeviceGroup {
 
     pub fn remove_device(&mut self, device_id: &str) -> Result<(), anyhow::Error> {
         if !self.has_device(device_id) {
+            error!("Device `{}` not in group `{}`", device_id, self.name());
             return Err(anyhow!("Device not in group"));
         }
 

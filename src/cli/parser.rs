@@ -58,7 +58,10 @@ pub enum Commands {
             value_enum)]
         match_mode: MatchMode,
         /// Name of the command
-        command: OsString
+        command: OsString,
+        /// Command arguments
+        #[arg(num_args(0..))]
+        args: Vec<String>,
     },
     /// Create and manage groups of devices
     #[command(visible_alias("grp"))]
@@ -107,7 +110,10 @@ pub enum GroupCommands {
         /// Name of the group
         group: OsString,
         /// Name of the command
-        command: OsString
+        command: OsString,
+        /// Command arguments
+        #[arg(num_args(0..))]
+        args: Vec<String>,
     },
 }
 

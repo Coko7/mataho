@@ -2,6 +2,7 @@ use std::{env, fs, path::PathBuf};
 
 use anyhow::anyhow;
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
+use log::{debug, error, info};
 use prettytable::{row, Table};
 use xdg::BaseDirectories;
 
@@ -20,7 +21,7 @@ impl MatahoService {
         let groups = match MatahoService::read_groups_from_file() {
             Ok(val) => val,
             Err(err) => {
-                println!("Error: {}", err);
+                error!("Error: {}", err);
                 Vec::new()
             }
         };
@@ -36,18 +37,32 @@ impl MatahoService {
         let mataho_config_var = "MATAHO_CONFIG";
 
         if env::var(mataho_config_var).is_ok() {
-            return Ok(PathBuf::from(mataho_config_var));
+            let val = PathBuf::from(mataho_config_var);
+            info!(
+                "get config from env: {} = {}",
+                mataho_config_var,
+                val.to_string_lossy()
+            );
+
+            return Ok(val);
         }
 
         if let Ok(xdg_dirs) = BaseDirectories::new() {
             let config_home = xdg_dirs.get_config_home();
-            return Ok(config_home.join(app_name));
+            let val = config_home.join(app_name);
+            info!("get config from XDG: {}", val.to_string_lossy());
+
+            return Ok(val);
         }
 
         if let Ok(home_dir) = env::var("HOME") {
-            return Ok(PathBuf::from(home_dir).join(".config").join(app_name));
+            let val = PathBuf::from(home_dir).join(".config").join(app_name);
+            info!("get config from HOME: {}", val.to_string_lossy());
+
+            return Ok(val);
         }
 
+        error!("No suitable place for config dir");
         Err(anyhow!("Failed to find config dir"))
     }
 
@@ -60,21 +75,28 @@ impl MatahoService {
     }
 
     fn read_groups_from_file() -> Result<Vec<DeviceGroup>, anyhow::Error> {
+        info!("read groups from file");
+
         let path = Self::groups_file_path()?;
         let json = fs::read_to_string(path)?;
         let groups: Vec<DeviceGroup> = serde_json::from_str(&json)?;
+        debug!("deserialize groups: `{} -> {:?}`", json, groups);
 
         Ok(groups)
     }
 
     pub fn create_config_file() -> Result<(), anyhow::Error> {
         let file_path = Self::config_file_path()?;
+        info!("create config file: `{}`", file_path.to_string_lossy());
+
         if let Some(config_dir) = file_path.parent() {
             fs::create_dir_all(config_dir)?;
         }
 
         let default_config = Configuration::new();
         let json = serde_json::to_string(&default_config)?;
+        debug!("default config serialized JSON: {}", json);
+
         fs::write(&file_path, json)?;
 
         Ok(())
@@ -82,12 +104,16 @@ impl MatahoService {
 
     pub fn create_groups_file() -> Result<(), anyhow::Error> {
         let file_path = Self::groups_file_path()?;
+        info!("create groups file: `{}`", file_path.to_string_lossy());
+
         if let Some(config_dir) = file_path.parent() {
             fs::create_dir_all(config_dir)?;
         }
 
         let default_groups: Vec<DeviceGroup> = Vec::new();
         let json = serde_json::to_string(&default_groups)?;
+        debug!("serialize groups: `{:?} -> {}`", default_groups, json);
+
         fs::write(&file_path, json)?;
 
         Ok(())
@@ -95,8 +121,11 @@ impl MatahoService {
 
     fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<(), anyhow::Error> {
         let file_path = Self::groups_file_path()?;
+        info!("write groups to file: `{}`", file_path.to_string_lossy());
 
         let json = serde_json::to_string(groups)?;
+        debug!("serialize groups: `{:?} -> {}`", groups, json);
+
         fs::write(file_path, json)?;
 
         Ok(())
@@ -194,6 +223,7 @@ impl MatahoService {
             return Ok(());
         }
 
+        error!("No such group: `{}`", group_name);
         Err(anyhow!("No such group: `{}`", group_name))
     }
 
@@ -208,11 +238,16 @@ impl MatahoService {
         };
 
         if let Some(group) = self.find_group_by_name_mut(group_name) {
+            info!("remove `{}` from group `{}`", device_id, group.name());
             group.remove_device(&device_id)?;
+
+            info!("sync groups to file");
             Self::write_groups_to_file(&self.groups)?;
+
             return Ok(());
         }
 
+        error!("No such group: `{}`", group_name);
         Err(anyhow!("No such group: `{}`", group_name))
     }
 
@@ -246,13 +281,19 @@ impl MatahoService {
 
             // Skip fuzzy matching when match mode is `exact`
             if match_mode == MatchMode::Exact {
+                debug!(
+                    "fuzzy: MatchMode::Exact, skip fuzzy_match for `{}`",
+                    device.label()
+                );
                 continue;
             }
 
             if let Some(score) = matcher.fuzzy_match(&device.label().to_lowercase(), &label) {
-                // println!("{} -> {}", device.label, score);
+                debug!("fuzzy: score for `{}`: `{}`", device.label(), score);
+
                 devices_scores.push((device, score));
                 if score > best_score {
+                    debug!("fuzzy: update best score: `{}` -> `{}`", best_score, score);
                     best_score = score;
                 }
             }
@@ -262,6 +303,8 @@ impl MatahoService {
 
         // More than one candidate
         if best_candidates.clone().count() > 1 {
+            error!("fuzzy: multiple best candidates: {:#?}", best_candidates);
+
             let candidates_labels: String = best_candidates
                 .map(|tuple| format!("`{}`", tuple.0.label()))
                 .collect::<Vec<String>>()
@@ -277,6 +320,7 @@ impl MatahoService {
             return Ok(best_match.0);
         }
 
+        error!("fuzzy: no match for: {}", label);
         Err(anyhow!("Failed to find a device that matches: `{}`", label))
     }
 
