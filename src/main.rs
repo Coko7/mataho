@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use log::info;
-use std::{ffi::OsString, fs, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 mod api;
 mod cli;
@@ -63,10 +63,13 @@ fn process_args(
     mataho_service: &mut MatahoService,
 ) -> Result<()> {
     match args.command {
-        Commands::List { filter } => {
+        Commands::List {
+            filter,
+            long_listing,
+        } => {
             info!("cmd::list: {}", filter);
 
-            Ok(mataho_service.print_devices(filter))
+            Ok(mataho_service.print_devices(filter, long_listing))
         }
         Commands::Info { device, match_mode } => {
             let device = device.to_string_lossy();

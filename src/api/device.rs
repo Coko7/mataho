@@ -26,6 +26,10 @@ impl Device {
         &self.label
     }
 
+    pub fn controllable_name(&self) -> &str {
+        &self.controllable_name
+    }
+
     pub fn device_type(&self) -> &str {
         match self.controllable_name.as_str() {
             "io:GarageOpenerIOComponent" => "garage opener",

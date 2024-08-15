@@ -157,13 +157,27 @@ impl MatahoService {
         }
     }
 
-    pub fn print_devices(&self, filter: DeviceTypeFilter) {
+    pub fn print_devices(&self, filter: DeviceTypeFilter, long_listing: bool) {
         let mut table = Table::new();
 
-        table.add_row(row!["ID", "Label", "Type"]);
+        if long_listing {
+            table.add_row(row!["ID", "Label", "Controllable type", "URL"]);
+        } else {
+            table.add_row(row!["ID", "Label", "Type"]);
+        }
+
         for device in &self.devices {
             if filter == DeviceTypeFilter::All || device.has_type(filter) {
-                table.add_row(row![device.id(), device.label(), device.device_type()]);
+                if long_listing {
+                    table.add_row(row![
+                        device.id(),
+                        device.label(),
+                        device.controllable_name(),
+                        device.url()
+                    ]);
+                } else {
+                    table.add_row(row![device.id(), device.label(), device.device_type()]);
+                }
             }
         }
 

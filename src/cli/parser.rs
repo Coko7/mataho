@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use std::ffi::OsString;
 
 use super::model::{DeviceTypeFilter, MatchMode};
@@ -26,6 +26,9 @@ pub enum Commands {
             default_missing_value = "all",
             value_enum)]
         filter: DeviceTypeFilter,
+        /// Use long listing format
+        #[arg(short = 'l', action)]
+        long_listing: bool,
     },
     /// Get information about a particular device (id, label, supported actions, etc.)
     Info {
