@@ -68,6 +68,13 @@ $ mataho ex coko open
 Executing `open` on `Coko's room`...
 ```
 
+Action arguments are supported as well:
+```
+$ mataho exec coco setClosureAndLinearSpeed 20 lowspeed
+
+Executing `setClosureAndLinearSpeed` on `Coko's room`...
+```
+
 Manage groups:
 ```
 $ mataho grp -h
