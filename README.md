@@ -31,7 +31,7 @@ $ mataho help
 
 Interact with your Tahoma box in the terminal
 
-Usage: mataho <COMMAND>
+Usage: mataho [OPTIONS] <COMMAND>
 
 Commands:
   list   Print the list of known local devices [aliases: ls]
@@ -41,7 +41,9 @@ Commands:
   help   Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help  Print help
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
 ```
 
 Display local devices:
@@ -72,7 +74,7 @@ $ mataho grp -h
 
 Create and manage groups of devices
 
-Usage: mataho group <COMMAND>
+Usage: mataho group [OPTIONS] <COMMAND>
 
 Commands:
   list    List all groups [aliases: ls]
@@ -84,7 +86,9 @@ Commands:
   help    Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help  Print help
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
 ```
 
 ## 📚 Resources
