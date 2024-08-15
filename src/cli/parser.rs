@@ -1,4 +1,4 @@
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use std::ffi::OsString;
 
 use super::model::{DeviceTypeFilter, MatchMode};
@@ -9,6 +9,8 @@ use super::model::{DeviceTypeFilter, MatchMode};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
+    #[command(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 #[derive(Debug, Subcommand)]

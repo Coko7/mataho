@@ -15,10 +15,10 @@ use cli::{
 use mataho::service::MatahoService;
 
 fn main() -> Result<()> {
-    env_logger::init();
-
-    info!("parsing cli args");
     let args = Cli::parse();
+    env_logger::Builder::new()
+        .filter_level(args.verbose.log_level_filter())
+        .init();
 
     info!("getting config file");
     let config_file_path = MatahoService::config_file_path()?;
