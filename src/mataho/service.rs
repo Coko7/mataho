@@ -1,6 +1,6 @@
 use std::{env, fs, path::PathBuf};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use fuzzy_matcher::{skim::SkimMatcherV2, FuzzyMatcher};
 use log::{debug, error, info};
 use prettytable::{row, Table};
@@ -32,7 +32,7 @@ impl MatahoService {
         }
     }
 
-    pub fn get_config_dir() -> Result<PathBuf, anyhow::Error> {
+    pub fn get_config_dir() -> Result<PathBuf> {
         let app_name = "mataho";
         let mataho_config_var = "MATAHO_CONFIG";
 
@@ -66,15 +66,15 @@ impl MatahoService {
         Err(anyhow!("Failed to find config dir"))
     }
 
-    pub fn config_file_path() -> Result<PathBuf, anyhow::Error> {
+    pub fn config_file_path() -> Result<PathBuf> {
         Ok(Self::get_config_dir()?.join("config.json"))
     }
 
-    pub fn groups_file_path() -> Result<PathBuf, anyhow::Error> {
+    pub fn groups_file_path() -> Result<PathBuf> {
         Ok(Self::get_config_dir()?.join("groups.json"))
     }
 
-    fn read_groups_from_file() -> Result<Vec<DeviceGroup>, anyhow::Error> {
+    fn read_groups_from_file() -> Result<Vec<DeviceGroup>> {
         info!("read groups from file");
 
         let path = Self::groups_file_path()?;
@@ -85,7 +85,7 @@ impl MatahoService {
         Ok(groups)
     }
 
-    pub fn create_config_file() -> Result<(), anyhow::Error> {
+    pub fn create_config_file() -> Result<()> {
         let file_path = Self::config_file_path()?;
         info!("create config file: `{}`", file_path.to_string_lossy());
 
@@ -102,7 +102,7 @@ impl MatahoService {
         Ok(())
     }
 
-    pub fn create_groups_file() -> Result<(), anyhow::Error> {
+    pub fn create_groups_file() -> Result<()> {
         let file_path = Self::groups_file_path()?;
         info!("create groups file: `{}`", file_path.to_string_lossy());
 
@@ -119,7 +119,7 @@ impl MatahoService {
         Ok(())
     }
 
-    fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<(), anyhow::Error> {
+    fn write_groups_to_file(groups: &Vec<DeviceGroup>) -> Result<()> {
         let file_path = Self::groups_file_path()?;
         info!("write groups to file: `{}`", file_path.to_string_lossy());
 
@@ -203,7 +203,7 @@ impl MatahoService {
         res
     }
 
-    pub fn create_group(&mut self, name: &str) -> Result<(), anyhow::Error> {
+    pub fn create_group(&mut self, name: &str) -> Result<()> {
         if self.find_group_by_name(name).is_some() {
             return Err(anyhow!("There is already a group named `{}`", name));
         }
@@ -215,7 +215,7 @@ impl MatahoService {
         Ok(())
     }
 
-    pub fn delete_group(&mut self, name: &str) -> Result<(), anyhow::Error> {
+    pub fn delete_group(&mut self, name: &str) -> Result<()> {
         if let Some(pos) = self.groups.iter().position(|group| group.name() == name) {
             self.groups.remove(pos);
             Self::write_groups_to_file(&self.groups)?;
@@ -225,7 +225,7 @@ impl MatahoService {
         Err(anyhow!("No such group: `{}`", name))
     }
 
-    pub fn add_to_group(&mut self, group_name: &str, device: &str) -> Result<(), anyhow::Error> {
+    pub fn add_to_group(&mut self, group_name: &str, device: &str) -> Result<()> {
         let device_id = {
             let device = self.find_device(device, MatchMode::Fuzzy)?;
             device.id().to_string()
@@ -241,11 +241,7 @@ impl MatahoService {
         Err(anyhow!("No such group: `{}`", group_name))
     }
 
-    pub fn remove_from_group(
-        &mut self,
-        group_name: &str,
-        device: &str,
-    ) -> Result<(), anyhow::Error> {
+    pub fn remove_from_group(&mut self, group_name: &str, device: &str) -> Result<()> {
         let device_id = {
             let device = self.find_device(device, MatchMode::Fuzzy)?;
             device.id().to_string()
@@ -276,11 +272,7 @@ impl MatahoService {
         }
     }
 
-    pub fn find_device_by_label(
-        &self,
-        label: &str,
-        match_mode: MatchMode,
-    ) -> Result<&Device, anyhow::Error> {
+    pub fn find_device_by_label(&self, label: &str, match_mode: MatchMode) -> Result<&Device> {
         let label = label.to_lowercase();
 
         let matcher = SkimMatcherV2::default();
@@ -342,11 +334,7 @@ impl MatahoService {
         self.devices.iter().find(|device| device.id() == id)
     }
 
-    pub fn find_device(
-        &self,
-        identifier: &str,
-        match_mode: MatchMode,
-    ) -> Result<&Device, anyhow::Error> {
+    pub fn find_device(&self, identifier: &str, match_mode: MatchMode) -> Result<&Device> {
         if let Some(device) = self.find_device_by_id(identifier) {
             return Ok(device);
         }

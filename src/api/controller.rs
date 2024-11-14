@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context, Result};
 use log::{debug, info};
 use serde::Deserialize;
 use serde_json::json;
@@ -29,25 +29,25 @@ impl TahomaApiController {
             .unwrap()
     }
 
-    pub fn get_setup(&self) -> Result<TahomaSetupResponse, reqwest::Error> {
+    pub fn get_setup(&self) -> Result<TahomaSetupResponse> {
         let client = Self::get_client();
 
         let url = self.endpoint("/enduser-mobile-web/1/enduserAPI/setup");
         info!("GET {}", url);
 
-        let res = client.get(url).bearer_auth(&self.api_token).send()?;
+        let res = client
+            .get(url)
+            .bearer_auth(&self.api_token)
+            .send()
+            .context("Failed to get Tahoma setup")?;
+
         let res = res.json()?;
         debug!("result: {:?}", res);
 
         Ok(res)
     }
 
-    pub fn execute(
-        &self,
-        device: &Device,
-        command: &str,
-        params: &Vec<String>,
-    ) -> Result<(), anyhow::Error> {
+    pub fn execute(&self, device: &Device, command: &str, params: &Vec<String>) -> Result<()> {
         let client = Self::get_client();
 
         let payload = json!({
@@ -88,7 +88,7 @@ impl TahomaApiController {
         devices: Vec<&Device>,
         command: &str,
         params: &Vec<String>,
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<()> {
         let client = Self::get_client();
 
         let mut all_actions = Vec::new();

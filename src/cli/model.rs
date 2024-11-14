@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use clap::ValueEnum;
 use log::error;
 use serde::{Deserialize, Serialize};
@@ -55,7 +55,7 @@ impl DeviceGroup {
         self.devices.iter().any(|id| id == device_id)
     }
 
-    pub fn add_device(&mut self, device_id: &str) -> Result<(), anyhow::Error> {
+    pub fn add_device(&mut self, device_id: &str) -> Result<()> {
         if self.has_device(device_id) {
             error!("Device `{}` already in group `{}`", device_id, self.name());
             return Err(anyhow!("Device already in group"));
@@ -64,7 +64,7 @@ impl DeviceGroup {
         Ok(self.devices.push(device_id.to_string()))
     }
 
-    pub fn remove_device(&mut self, device_id: &str) -> Result<(), anyhow::Error> {
+    pub fn remove_device(&mut self, device_id: &str) -> Result<()> {
         if !self.has_device(device_id) {
             error!("Device `{}` not in group `{}`", device_id, self.name());
             return Err(anyhow!("Device not in group"));
