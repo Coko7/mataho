@@ -7,8 +7,9 @@ use prettytable::{row, Table};
 use xdg::BaseDirectories;
 
 use crate::{
-    api::{controller::TahomaSetupResponse, device::Device},
-    cli::model::{Configuration, DeviceGroup, DeviceTypeFilter, MatchMode},
+    controller::TahomaSetupResponse,
+    device::Device,
+    model::{Configuration, DeviceGroup, DeviceTypeFilter, MatchMode},
 };
 
 pub struct MatahoService {

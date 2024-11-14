@@ -39,7 +39,7 @@ impl TahomaApiController {
             .get(url)
             .bearer_auth(&self.api_token)
             .send()
-            .context("Failed to get Tahoma setup")?;
+            .context("Failed to get setup. Check your configuration file.")?;
 
         let res = res.json()?;
         debug!("result: {:?}", res);

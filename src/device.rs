@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use crate::DeviceTypeFilter;
+use crate::model::DeviceTypeFilter;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Device {

@@ -1,18 +1,19 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use cli::{Cli, Commands, GroupCommands};
 use log::info;
+use model::{Configuration, MatchMode};
+use service::MatahoService;
 use std::{fs, path::PathBuf};
 
-mod api;
 mod cli;
-mod mataho;
+mod controller;
+mod device;
+mod device_group;
+mod model;
+mod service;
 
-use api::controller::TahomaApiController;
-use cli::{
-    model::{Configuration, DeviceTypeFilter, MatchMode},
-    parser::{Cli, Commands, GroupCommands},
-};
-use mataho::service::MatahoService;
+use controller::TahomaApiController;
 
 fn main() -> Result<()> {
     let args = Cli::parse();
