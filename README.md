@@ -1,4 +1,4 @@
-# mataho
+# 🏠 mataho
 
 A rust command line tool that allows you to interact with your local Tahoma box.
 This is a port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
@@ -26,9 +26,8 @@ Create a config file at `$HOME/.config/mataho/config.json`:
 ## 🐚 Usage
 
 Typing `mataho help` will print the documentation:
-```
-$ mataho help
-
+```console
+coko7@example:~$ mataho help
 Interact with your Tahoma box in the terminal
 
 Usage: mataho [OPTIONS] <COMMAND>
@@ -47,9 +46,8 @@ Options:
 ```
 
 Display local devices:
-```
-$ mataho ls
-
+```console
+coko7@example:~$ mataho ls
 +----------+-----------------+----------------+
 | ID       | Label           | Type           |
 +----------+-----------------+----------------+
@@ -62,23 +60,20 @@ $ mataho ls
 ```
 
 Execute a command/action on a particular device (fuzzy matching is used to find the device):
-```
-$ mataho ex coko open
-
+```console
+coko7@example:~$ mataho ex coko open
 Executing `open` on `Coko's room`...
 ```
 
 Action arguments are supported as well:
-```
-$ mataho exec coco setClosureAndLinearSpeed 20 lowspeed
-
+```console
+coko7@example:~$ mataho exec coco setClosureAndLinearSpeed 20 lowspeed
 Executing `setClosureAndLinearSpeed` on `Coko's room`...
 ```
 
 Manage groups:
-```
-$ mataho grp -h
-
+```console
+coko7@example:~$ mataho grp -h
 Create and manage groups of devices
 
 Usage: mataho group [OPTIONS] <COMMAND>
