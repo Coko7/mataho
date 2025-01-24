@@ -1,5 +1,7 @@
 # 🏠 mataho
 
+![build](https://github.com/coko7/mataho/actions/workflows/rust.yml/badge.svg)
+
 A rust command line tool that allows you to interact with your local Tahoma box.
 This is a port of the cli from my [somfy-home-controller](https://github.com/coko7/somfy-home-controller) project.
 
