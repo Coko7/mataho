@@ -10,18 +10,16 @@ New features have been added:
 
 ## 🛠️ Setup
 
-Create a config file at `$HOME/.config/mataho/config.json`:
-```json
-{
-    "hostname": "https://gateway-XXXX-XXXX-XXXX"
-    "port": 8443,
-    "api_token": "PUT_YOUR_SUPER_SECRET_TOKEN_HERE",
-}
+Create a config file at `$HOME/.config/mataho/config.toml`:
+```toml
+hostname = "https://gateway-XXXX-XXXX-XXXX"
+port = 8443
+api_token = "PUT_YOUR_SUPER_SECRET_TOKEN_HERE"
 ```
 
 *NOTE: If you want to use a different path for the configuration direction, you can do so by setting the `$MATAHO_CONFIG` env variable.*
 
-*You must keep the filename as `config.json` though.*
+*You must keep the filename as `config.toml` though.*
 
 ## 🐚 Usage
 

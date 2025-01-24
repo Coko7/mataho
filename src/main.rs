@@ -36,7 +36,7 @@ fn main() -> Result<()> {
     }
 
     info!("loading config");
-    let config = read_config(config_file_path)?;
+    let config = load_config(config_file_path)?;
 
     info!("init Tahoma api controller");
     let controller = TahomaApiController::new(&config);
@@ -50,11 +50,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_config(path: PathBuf) -> Result<Configuration> {
-    let json_content = fs::read_to_string(path)?;
-    info!("parsing config json");
-    let config: Configuration = serde_json::from_str(&json_content)?;
+fn load_config(path: PathBuf) -> Result<Configuration> {
+    let content = fs::read_to_string(path)?;
 
+    info!("parsing config toml");
+    let config: Configuration = toml::from_str(&content)?;
     Ok(config)
 }
 

@@ -68,7 +68,7 @@ impl MatahoService {
     }
 
     pub fn config_file_path() -> Result<PathBuf> {
-        Ok(Self::get_config_dir()?.join("config.json"))
+        Ok(Self::get_config_dir()?.join("config.toml"))
     }
 
     pub fn groups_file_path() -> Result<PathBuf> {
