@@ -20,7 +20,7 @@ pub enum Commands {
     List {
         /// Only display a subcategory of devices
         #[arg(
-            long, 
+            long,
             require_equals = true,
             value_name = "TYPE",
             num_args = 0..=1,
@@ -36,25 +36,25 @@ pub enum Commands {
     Info {
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
-        /// Match mode for the device 
+        /// Match mode for the device
         #[arg(
-            long, 
+            long,
             require_equals = true,
             value_name = "MODE",
             num_args = 0..=1,
             default_value_t = MatchMode::Fuzzy,
             default_missing_value = "fuzzy",
             value_enum)]
-        match_mode: MatchMode
+        match_mode: MatchMode,
     },
     /// Execute a Tahoma action on a single device
     #[command(visible_alias("ex"))]
     Exec {
         /// ID or label of the device. See match-mode for label matching
         device: OsString,
-        /// Match mode for the device 
+        /// Match mode for the device
         #[arg(
-            long, 
+            long,
             require_equals = true,
             value_name = "MODE",
             num_args = 0..=1,
@@ -72,26 +72,26 @@ pub enum Commands {
     #[command(visible_alias("grp"))]
     Group {
         #[command(subcommand)]
-        command: GroupCommands
-    }
+        command: GroupCommands,
+    },
 }
 
 #[derive(Debug, Subcommand)]
 pub enum GroupCommands {
     /// List all groups
     #[command(visible_alias("ls"))]
-    List { },
+    List {},
     /// Create a new group
     #[command(name = "create")]
     Create {
         /// Name of the group
-        name: OsString
+        name: OsString,
     },
     /// Delete a group
     #[command(name = "delete")]
     Delete {
         /// Name of the group
-        name: OsString
+        name: OsString,
     },
     /// Add a device to an existing group
     #[command(name = "join")]
@@ -121,4 +121,3 @@ pub enum GroupCommands {
         args: Vec<String>,
     },
 }
-
