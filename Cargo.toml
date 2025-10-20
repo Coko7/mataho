@@ -4,11 +4,9 @@ version = "0.1.0"
 authors = ["Coko <91132775+Coko7@users.noreply.github.com>"]
 edition = "2021"
 description = "A cli to interact with a local Tahoma box"
-readme = "README.md"
-homepage = "https://github.com/Coko7/mataho"
-repository = "https://github.com/Coko7/mataho"
 license = "GPL-3.0-only"
-keywords = ["cli", "tahoma", "mataho", "somfy", "clap-rs"]
+repository = "https://github.com/Coko7/mataho"
+keywords = ["cli", "tahoma", "somfy", "smart-home", "home-automation"]
 categories = ["command-line-utilities"]
 
 [dependencies]

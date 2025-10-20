@@ -6,6 +6,7 @@ use super::model::{DeviceTypeFilter, MatchMode};
 #[derive(Debug, Parser)]
 #[command(name = "mataho")]
 #[command(about = "Interact with your Tahoma box in the terminal", long_about = None)]
+#[command(version)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
